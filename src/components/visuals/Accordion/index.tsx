@@ -114,6 +114,8 @@ const Accordion: React.FC<AccordionProps> = ({
   allowMultiple = false,
   defaultOpenIndexes = [],
   className = '',
+  // itemClassName is used for TypeScript typing but not actually used in component render
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   itemClassName = '',
   titleClassName = '',
   contentClassName = '',

@@ -3,13 +3,6 @@ import Link from 'next/link';
 import { visuals } from '@/data/visuals';
 import VisualComponentDisplay from '@/components/VisualComponentDisplay';
 
-interface ComponentPageProps {
-  params: {
-    category: string;
-    slug: string;
-  }
-}
-
 export function generateStaticParams() {
   return visuals.map(visual => ({
     category: visual.category,
@@ -17,7 +10,11 @@ export function generateStaticParams() {
   }));
 }
 
-export default function ComponentDetailPage({ params }: ComponentPageProps) {
+export default function ComponentDetailPage({ 
+  params 
+}: { 
+  params: { category: string; slug: string } 
+}) {
   const visual = visuals.find(v => 
     v.category === params.category && v.slug === params.slug
   );
