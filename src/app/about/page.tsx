@@ -17,7 +17,7 @@ export default function AboutPage() {
         
         <h2 className="text-2xl font-bold mt-10 mb-4">Our Vision</h2>
         <p>
-          Frontend Visualizer is an intuitive, static web-based catalog designed to empower "vibe coders," designers, and developers who think visually. 
+          Frontend Visualizer is an intuitive, static web-based catalog designed to empower &quot;vibe coders,&quot; designers, and developers who think visually. 
           The core mission is to bridge the often challenging gap between a conceptual visual idea for a user interface element or effect and its corresponding 
           technical name or classification.
         </p>

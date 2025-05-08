@@ -6,7 +6,7 @@ export default function CategoryNotFound() {
       <h1 className="text-3xl md:text-4xl font-bold mb-6">Category Not Found</h1>
       
       <p className="text-lg text-foreground/70 mb-8 text-center max-w-md">
-        The category you're looking for doesn't exist or has been moved.
+        The category you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
       
       <div className="flex flex-wrap gap-4 justify-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// No React hooks needed for this component
 import dynamic from 'next/dynamic';
 
 interface VisualComponentDisplayProps {

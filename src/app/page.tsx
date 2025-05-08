@@ -7,7 +7,7 @@ export default function Home() {
       <section className="py-16 mb-20 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Frontend Visualizer</h1>
         <p className="text-xl text-foreground/80 max-w-3xl mx-auto mb-10">
-          A visual dictionary for UI components and effects. Find the technical name for that visual element you're thinking of but can't quite describe.  
+          A visual dictionary for UI components and effects. Find the technical name for that visual element you&apos;re thinking of but can&apos;t quite describe.  
         </p>
         
         <div className="flex flex-wrap gap-4 justify-center">
