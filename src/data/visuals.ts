@@ -147,6 +147,15 @@ export const visuals: Visual[] = [
     tags: ['input', 'form', 'search', 'filter', 'query'],
     componentPath: 'visuals/SearchField',
   },
+  {
+    name: 'Rating',
+    slug: 'rating',
+    category: 'input',
+    description: 'An interactive component that allows users to provide a rating on a numeric scale, often visualized as stars, hearts, or other symbols.',
+    altNames: ['Star Rating', 'Review Stars', 'Rate Input', 'Feedback Stars'],
+    tags: ['input', 'feedback', 'evaluation', 'stars', 'review'],
+    componentPath: 'visuals/Rating',
+  },
 
   // Feedback Components
   {
@@ -260,6 +269,15 @@ export const visuals: Visual[] = [
     altNames: ['Data Grid', 'Data Table', 'Grid View'],
     tags: ['data', 'layout', 'organization', 'tabular', 'grid'],
     componentPath: 'visuals/Table',
+  },
+  {
+    name: 'Timeline',
+    slug: 'timeline',
+    category: 'data',
+    description: 'A visual representation of a sequence of events or milestones arranged chronologically, used to display historical events, project phases, or processes.',
+    altNames: ['Chronology', 'History Line', 'Process Flow', 'Time-Series'],
+    tags: ['data', 'chronology', 'sequence', 'events', 'history', 'process'],
+    componentPath: 'visuals/Timeline',
   },
 
   // Animation & Effects
