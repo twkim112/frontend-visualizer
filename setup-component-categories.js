@@ -50,6 +50,9 @@ const knownComponentCategories = {
   'Carousel': { category: 'container', subcategory: 'carousel' },
   'Divider': { category: 'container', subcategory: 'divider' },
   
+  // Data presentation components
+  'Table': { category: 'data', subcategory: 'table' },
+  
   // Animation & effect components
   'FadeTransition': { category: 'animation', subcategory: 'fade-transition' },
   'HoverEffect': { category: 'animation', subcategory: 'hover-effect' }
