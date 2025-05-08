@@ -323,63 +323,112 @@ const Stepper: React.FC<StepperProps> = ({
     );
   }
   
-  // For horizontal orientation - using a grid layout to ensure perfect alignment
+  // For horizontal orientation with connector lines that don't overlap with the step icons
   return (
-    <div className={`${className} pb-16`} role="navigation" aria-label="Progress">
-      <div className="grid" style={{ gridTemplateColumns: `repeat(${steps.length * 2 - 1}, auto)` }}>
-        {/* Step indicators and connectors row */}
-        <div className="flex w-full">
-          {steps.map((step, index) => {
-            const stepStatus = getStepStatus(index);
-            const isLast = index === steps.length - 1;
-            
-            return (
-              <React.Fragment key={index}>
-                {/* Each step gets a dedicated grid column */}
-                <div className="flex justify-center" style={{ gridColumn: index * 2 + 1 }}>
-                  <Step
-                    label={step.label}
-                    description={step.description}
-                    status={stepStatus}
-                    icon={step.icon}
-                    showConnector={false} // Handle connectors separately
-                    onClick={clickable ? () => handleStepClick(index) : undefined}
-                    optional={step.optional}
-                    size={size}
-                    variant={variant}
-                    stepNumber={index + 1}
-                    totalSteps={steps.length}
-                  />
-                </div>
+    <div className={`${className} py-4`} role="navigation" aria-label="Progress">
+      <div className="relative">
+        {/* First create the connector lines as a base layer */}
+        {showConnectors && (
+          <div className="absolute top-0 w-full" style={{ left: 0 }}>
+            <div className="flex items-center h-full">
+              {/* Main connector line - positioned precisely between icons */}
+              <div className="h-0.5 bg-gray-300 dark:bg-gray-600" style={{
+                position: 'absolute',
+                top: size === 'small' ? '12px' : size === 'large' ? '24px' : '16px',
+                /* Calculate the width to start after first icon and end before last icon */
+                left: `calc(${100 / steps.length}% / 2)`,
+                right: `calc(${100 / steps.length}% / 2)`,
+              }} />
+              
+              {/* Add colored sections for completed steps - precisely aligned */}
+              {steps.map((_, index) => {
+                if (index === steps.length - 1) return null;
+                const isCompleted = getStepStatus(index) === 'completed';
+                if (!isCompleted) return null;
                 
-                {/* Connector lines between steps */}
-                {!isLast && showConnectors && (
+                // Calculate step boundaries
+                const stepWidth = 100 / steps.length;
+                
+                return (
                   <div 
-                    className={`flex-1 h-0.5 self-center ${getStepStatus(index) === 'completed' ? 'bg-green-500 dark:bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={{ gridColumn: index * 2 + 2, width: '100%' }}
+                    key={`connector-${index}`}
+                    className="h-0.5 bg-green-500 dark:bg-green-500" 
+                    style={{
+                      position: 'absolute',
+                      top: size === 'small' ? '12px' : size === 'large' ? '24px' : '16px',
+                      left: `calc(${stepWidth * index + (stepWidth / 2)}%)`,
+                      width: `${stepWidth}%`,
+                    }}
                   />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-        
-        {/* Labels and descriptions in a grid that precisely aligns with steps above */}
-        <div className="grid w-full mt-4" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
-          {steps.map((step, index) => (
-            <div key={`label-${index}`} className="text-center px-2" style={{ gridColumn: index + 1 }}>
-              <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
-                {step.label}
-                {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
-              </div>
-              {step.description && (
-                <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
-                  {step.description}
-                </div>
-              )}
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+        
+        {/* Table for perfect alignment of steps and labels */}
+        <table className="w-full table-fixed border-separate border-spacing-0">
+          <tbody>
+            {/* Top row: just the steps (connectors are handled above) */}
+            <tr>
+              {steps.map((step, index) => {
+                const stepStatus = getStepStatus(index);
+                
+                return (
+                  <td key={index} className="text-center relative">
+                    {/* Add a white circle behind the step to hide the connector line */}
+                    {showConnectors && (
+                      <div 
+                        className="absolute rounded-full bg-white dark:bg-gray-800" 
+                        style={{
+                          height: size === 'small' ? '20px' : size === 'large' ? '40px' : '30px',
+                          width: size === 'small' ? '20px' : size === 'large' ? '40px' : '30px',
+                          top: size === 'small' ? '2px' : size === 'large' ? '4px' : '3px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                        }}
+                      />
+                    )}
+                    
+                    {/* The step indicator */}
+                    <div className="flex justify-center relative">
+                      <Step
+                        label={step.label}
+                        description={step.description}
+                        status={stepStatus}
+                        icon={step.icon}
+                        showConnector={false}
+                        onClick={clickable ? () => handleStepClick(index) : undefined}
+                        optional={step.optional}
+                        size={size}
+                        variant={variant}
+                        stepNumber={index + 1}
+                        totalSteps={steps.length}
+                      />
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+            
+            {/* Bottom row: the labels */}
+            <tr>
+              {steps.map((step, index) => (
+                <td key={index} className="text-center pt-4 px-1">
+                  <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
+                    {step.label}
+                    {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
+                  </div>
+                  {step.description && (
+                    <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
+                      {step.description}
+                    </div>
+                  )}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
