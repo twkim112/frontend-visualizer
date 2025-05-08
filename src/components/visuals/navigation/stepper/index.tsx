@@ -230,17 +230,9 @@ const Step: React.FC<StepProps> = ({
         <div className={`flex-1 h-0.5 mx-2 ${getConnectorColor()}`} />
       )}
       
-      {/* Step label and description */}
-      <div className="absolute mt-10">
-        <div className={`font-medium ${textSizeClass}`}>
-          {label}
-          {optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
-        </div>
-        {description && (
-          <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
-            {description}
-          </div>
-        )}
+      {/* Empty div to maintain layout - labels now handled in parent */}
+      <div style={{ width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <span>{label}</span>
       </div>
     </div>
   );
@@ -283,7 +275,8 @@ const Stepper: React.FC<StepperProps> = ({
   // Generate classes for the stepper container
   const stepperClasses = `
     flex 
-    ${orientation === 'vertical' ? 'flex-col space-y-8' : 'flex-row space-x-0 justify-between'}
+    ${orientation === 'vertical' ? 'flex-col space-y-6' : 'flex-row space-x-0 justify-between'}
+    ${orientation === 'horizontal' ? 'pb-16' : ''}
     ${className}
   `.trim();
   
@@ -301,25 +294,72 @@ const Stepper: React.FC<StepperProps> = ({
           <div 
             key={index}
             className={`
-              ${orientation === 'vertical' ? 'flex flex-row' : alternateLabels && index % 2 !== 0 ? 'flex flex-col-reverse pt-10' : 'flex flex-col pt-0'}
+              ${orientation === 'vertical' ? 'flex flex-row space-x-4' : alternateLabels && index % 2 !== 0 ? 'flex flex-col-reverse pt-10' : 'flex flex-col pt-0'}
               ${orientation === 'vertical' ? 'items-start' : 'items-center'}
               ${orientation === 'horizontal' ? 'flex-1' : ''}
               relative
             `}
           >
-            <Step
-              label={step.label}
-              description={step.description}
-              status={stepStatus}
-              icon={step.icon}
-              showConnector={showConnector}
-              onClick={clickable ? () => handleStepClick(index) : undefined}
-              optional={step.optional}
-              size={size}
-              variant={variant}
-              stepNumber={index + 1}
-              totalSteps={steps.length}
-            />
+            {/* For horizontal orientation, wrap the step in a flex column div for centered alignment */}
+            {orientation === 'horizontal' ? (
+              <div className="flex flex-col items-center">
+                <Step
+                  label={step.label}
+                  description={step.description}
+                  status={stepStatus}
+                  icon={step.icon}
+                  showConnector={showConnector}
+                  onClick={clickable ? () => handleStepClick(index) : undefined}
+                  optional={step.optional}
+                  size={size}
+                  variant={variant}
+                  stepNumber={index + 1}
+                  totalSteps={steps.length}
+                />
+                
+                {/* Step label positioned directly below the step */}
+                <div className="mt-6 text-center w-full">
+                  <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
+                    {step.label}
+                    {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
+                  </div>
+                  {step.description && (
+                    <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
+                      {step.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Step
+                label={step.label}
+                description={step.description}
+                status={stepStatus}
+                icon={step.icon}
+                showConnector={showConnector}
+                onClick={clickable ? () => handleStepClick(index) : undefined}
+                optional={step.optional}
+                size={size}
+                variant={variant}
+                stepNumber={index + 1}
+                totalSteps={steps.length}
+              />
+            )}
+            
+            {/* Labels for vertical orientation */}
+            {orientation === 'vertical' && (
+              <div className="flex-1">
+                <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
+                  {step.label}
+                  {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
+                </div>
+                {step.description && (
+                  <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
+                    {step.description}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
