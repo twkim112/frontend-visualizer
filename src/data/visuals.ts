@@ -55,6 +55,15 @@ export const visuals: Visual[] = [
     tags: ['navigation', 'hierarchy', 'location'],
     componentPath: 'visuals/Breadcrumbs',
   },
+  {
+    name: 'Pagination',
+    slug: 'pagination',
+    category: 'navigation',
+    description: 'A navigation component that provides a series of links to navigate through multiple pages of content, typically used for search results, tables, or content lists.',
+    altNames: ['Page Navigation', 'Pager', 'Page Controls'],
+    tags: ['navigation', 'pages', 'results', 'content-division'],
+    componentPath: 'visuals/Pagination',
+  },
   
   // Input Components
   {
@@ -110,6 +119,33 @@ export const visuals: Visual[] = [
     altNames: ['Switch', 'Slider Toggle'],
     tags: ['input', 'form', 'toggle', 'binary', 'on-off'],
     componentPath: 'visuals/ToggleSwitch',
+  },
+  {
+    name: 'Color Picker',
+    slug: 'color-picker',
+    category: 'input',
+    description: 'A specialized input control allowing users to select a color value visually. Provides various interfaces for color selection including sliders, swatches, and hex input.',
+    altNames: ['Color Selector', 'Color Chooser', 'Color Palette'],
+    tags: ['input', 'form', 'color', 'selection', 'customization'],
+    componentPath: 'visuals/ColorPicker',
+  },
+  {
+    name: 'File Upload',
+    slug: 'file-upload',
+    category: 'input',
+    description: 'A component for selecting and uploading files, supporting both button-based selection and drag-and-drop functionality.',
+    altNames: ['File Dropzone', 'File Picker', 'Attachment Input'],
+    tags: ['input', 'form', 'upload', 'files', 'drag-and-drop'],
+    componentPath: 'visuals/FileUpload',
+  },
+  {
+    name: 'Search Field',
+    slug: 'search-field',
+    category: 'input',
+    description: 'A specialized input component designed for search functionality, featuring a search icon, clear button, and optimized for search interactions.',
+    altNames: ['Search Bar', 'Search Box', 'Search Input', 'Query Input'],
+    tags: ['input', 'form', 'search', 'filter', 'query'],
+    componentPath: 'visuals/SearchField',
   },
 
   // Feedback Components
@@ -252,5 +288,23 @@ export const visuals: Visual[] = [
     altNames: ['Beat Animation', 'Heartbeat Effect', 'Throbbing Animation'],
     tags: ['animation', 'attention', 'feedback', 'visual'],
     componentPath: 'visuals/PulseAnimation',
+  },
+  {
+    name: 'Scroll Animation',
+    slug: 'scroll-animation',
+    category: 'animation',
+    description: 'Animations triggered as elements enter the viewport during scrolling, creating a dynamic and engaging user experience.',
+    altNames: ['On-Scroll Animation', 'Scrollmation', 'Reveal on Scroll'],
+    tags: ['animation', 'scroll', 'reveal', 'interaction', 'dynamic'],
+    componentPath: 'visuals/ScrollAnimation',
+  },
+  {
+    name: 'Parallax Effect',
+    slug: 'parallax-effect',
+    category: 'animation',
+    description: 'Creates an illusion of depth by moving background and foreground layers at different speeds during scrolling.',
+    altNames: ['Parallax Scrolling', 'Multi-layer Scrolling', 'Depth Scrolling'],
+    tags: ['animation', 'scroll', 'depth', 'immersion', 'layers'],
+    componentPath: 'visuals/ParallaxEffect',
   }
 ];

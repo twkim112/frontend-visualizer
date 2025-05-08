@@ -33,25 +33,6 @@ export interface ModalProps {
  * 
  * A window that appears on top of the main content, requiring user interaction
  * before returning to the parent application.
- * 
- * @param isOpen - Whether the modal is currently visible
- * @param onClose - Function called when the modal is closed
- * @param title - Content for the modal header
- * @param children - Content for the modal body
- * @param footer - Content for the modal footer
- * @param size - Size of the modal dialog
- * @param position - Position of the modal on the screen
- * @param closeOnOverlayClick - Whether clicking the overlay closes the modal
- * @param closeOnEscape - Whether pressing Escape closes the modal
- * @param showCloseButton - Whether to show a close button in the header
- * @param className - Additional CSS class for the modal container
- * @param overlayClassName - Additional CSS class for the modal overlay
- * @param contentClassName - Additional CSS class for the modal content
- * @param headerClassName - Additional CSS class for the modal header
- * @param bodyClassName - Additional CSS class for the modal body
- * @param footerClassName - Additional CSS class for the modal footer
- * @param initialFocus - Ref of element to focus when modal opens
- * @param disableAnimation - Whether to disable open/close animations
  */
 const Modal: React.FC<ModalProps> = ({
   isOpen,
@@ -73,220 +54,179 @@ const Modal: React.FC<ModalProps> = ({
   initialFocus,
   disableAnimation = false,
 }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [animationState, setAnimationState] = useState<'entering' | 'entered' | 'exiting' | 'exited'>(
-    isOpen ? 'entering' : 'exited'
-  );
+  // State for client-side rendering and controlling the portal
+  const [mounted, setMounted] = useState(false);
   
+  // References for focusing and accessibility management
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<Element | null>(null);
   
-  // Handle mounting/unmounting (client-side only)
+  // Mount the component client-side only
   useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
   
-  // Store previous active element when modal opens
+  // Save the previously focused element when the modal opens
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement;
     }
   }, [isOpen]);
   
-  // Handle animation states
+  // Handle focus management
   useEffect(() => {
-    if (!disableAnimation) {
-      let animationTimeout: NodeJS.Timeout;
-      
-      if (isOpen) {
-        setAnimationState('entering');
-        animationTimeout = setTimeout(() => {
-          setAnimationState('entered');
-        }, 20); // Small delay to ensure 'entering' class is applied
-      } else if (animationState !== 'exited') {
-        setAnimationState('exiting');
-        animationTimeout = setTimeout(() => {
-          setAnimationState('exited');
-        }, 300); // Match transition duration
-      }
-      
-      return () => clearTimeout(animationTimeout);
-    } else {
-      setAnimationState(isOpen ? 'entered' : 'exited');
-    }
-  }, [isOpen, disableAnimation, animationState]);
-  
-  // Focus management
-  useEffect(() => {
-    if (isOpen && animationState === 'entered') {
-      const focusElement = initialFocus?.current || modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') as HTMLElement;
-      
-      if (focusElement) {
+    if (!isOpen || !mounted) return;
+    
+    // Set focus to the first focusable element or the modal itself
+    const focusElement = initialFocus?.current || 
+      modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') as HTMLElement;
+    
+    if (focusElement) {
+      setTimeout(() => {
         focusElement.focus();
-      } else if (modalRef.current) {
-        modalRef.current.focus();
-      }
-    } else if (!isOpen && previousActiveElement.current instanceof HTMLElement) {
-      previousActiveElement.current.focus();
+      }, 50);
+    } else if (modalRef.current) {
+      modalRef.current.focus();
     }
-  }, [isOpen, initialFocus, animationState]);
+    
+    // Return focus to the previously focused element when modal closes
+    return () => {
+      if (previousActiveElement.current instanceof HTMLElement) {
+        previousActiveElement.current.focus();
+      }
+    };
+  }, [isOpen, initialFocus, mounted]);
   
-  // Close on escape key
+  // Handle keyboard navigation (Escape to close)
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (closeOnEscape && isOpen && event.key === 'Escape') {
+    if (!isOpen || !mounted) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (closeOnEscape && e.key === 'Escape') {
         onClose();
       }
     };
     
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, closeOnEscape, mounted]);
+  
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+    
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
     
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalStyle;
     };
-  }, [closeOnEscape, isOpen, onClose]);
+  }, [isOpen, mounted]);
   
-  // Prevent scrolling on the body when modal is open
+  // Focus trap to keep focus within the modal
   useEffect(() => {
-    if (isOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
-  }, [isOpen]);
-  
-  // Handle focus trap
-  useEffect(() => {
-    if (!isOpen || !modalRef.current) return;
+    if (!isOpen || !mounted || !modalRef.current) return;
     
-    const handleFocusTrap = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab' || !modalRef.current) return;
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
       
-      const focusableElements = modalRef.current.querySelectorAll(
+      const focusableElements = modalRef.current?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
       
-      if (focusableElements.length === 0) return;
+      if (!focusableElements || focusableElements.length === 0) return;
       
       const firstElement = focusableElements[0] as HTMLElement;
       const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
       
-      if (event.shiftKey && document.activeElement === firstElement) {
+      if (e.shiftKey && document.activeElement === firstElement) {
         lastElement.focus();
-        event.preventDefault();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
         firstElement.focus();
-        event.preventDefault();
+        e.preventDefault();
       }
     };
     
-    document.addEventListener('keydown', handleFocusTrap);
-    
-    return () => {
-      document.removeEventListener('keydown', handleFocusTrap);
-    };
-  }, [isOpen]);
+    document.addEventListener('keydown', handleTabKey);
+    return () => document.removeEventListener('keydown', handleTabKey);
+  }, [isOpen, mounted]);
+  
+  // Bail out if not mounted or modal is not open
+  if (!mounted) {
+    return null;
+  }
+  
+  if (!isOpen) {
+    return null;
+  }
   
   // Size classes
-  const getSizeClass = () => {
-    switch (size) {
-      case 'small': return 'max-w-sm';
-      case 'medium': return 'max-w-md';
-      case 'large': return 'max-w-lg';
-      case 'fullscreen': return 'max-w-full m-4';
-      default: return 'max-w-md';
-    }
+  const sizeClasses = {
+    small: 'max-w-sm',
+    medium: 'max-w-md',
+    large: 'max-w-lg',
+    fullscreen: 'max-w-full m-4'
   };
   
   // Position classes
-  const getPositionClasses = () => {
-    switch (position) {
-      case 'top': return 'items-start mt-16';
-      case 'right': return 'justify-end items-center mr-16';
-      case 'bottom': return 'items-end mb-16';
-      case 'left': return 'justify-start items-center ml-16';
-      case 'center':
-      default: return 'items-center justify-center';
-    }
+  const positionClasses = {
+    center: 'items-center justify-center',
+    top: 'items-start mt-16',
+    right: 'justify-end items-center mr-16',
+    bottom: 'items-end mb-16',
+    left: 'justify-start items-center ml-16'
   };
   
-  // Animation classes
-  const getAnimationClasses = () => {
-    if (disableAnimation) return '';
-    
-    switch (animationState) {
-      case 'entering': return 'opacity-0 scale-95';
-      case 'entered': return 'opacity-100 scale-100';
-      case 'exiting': return 'opacity-0 scale-95';
-      case 'exited': return 'opacity-0 scale-95';
-      default: return '';
-    }
-  };
-  
-  // Handle overlay click
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  // Handle clicks on the backdrop
+  const handleBackdropClick = (e: React.MouseEvent) => {
     if (closeOnOverlayClick && e.target === e.currentTarget) {
       onClose();
     }
   };
   
-  // Don't render anything on the server or if not mounted
-  if (!isMounted || animationState === 'exited' && !isOpen) {
-    return null;
-  }
-  
-  const modalElement = (
-    <div
-      className={`fixed inset-0 z-50 overflow-y-auto ${overlayClassName}`}
-      aria-labelledby="modal-title"
-      role="dialog"
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto flex justify-center items-center"
       aria-modal="true"
-      onClick={handleOverlayClick}
+      role="dialog"
+      aria-labelledby="modal-title"
     >
-      {/* Overlay backdrop */}
+      {/* Backdrop overlay */}
       <div 
-        className={`fixed inset-0 bg-black transition-opacity duration-300 ease-in-out ${animationState === 'entered' ? 'bg-opacity-50' : 'bg-opacity-0'}`}
+        className={`fixed inset-0 bg-black bg-opacity-50 ${overlayClassName}`} 
+        onClick={handleBackdropClick}
         aria-hidden="true"
       />
       
-      {/* Modal positioning */}
-      <div className={`flex min-h-screen ${getPositionClasses()}`}>
-        {/* Modal content */}
-        <div
+      {/* Modal container */}
+      <div className={`flex min-h-screen w-full ${positionClasses[position] || positionClasses.center}`}>
+        {/* Modal */}
+        <div 
           ref={modalRef}
           className={`
-            relative z-10 w-full ${getSizeClass()} 
-            bg-white dark:bg-gray-800 rounded-lg shadow-xl 
-            transition-all duration-300 ease-in-out
-            transform ${getAnimationClasses()}
-            ${className}
+            relative bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50
+            w-full ${sizeClasses[size] || sizeClasses.medium}
+            ${contentClassName || className}
+            ${disableAnimation ? '' : 'animate-modal-appear'}
           `}
           tabIndex={-1}
-          role="dialog"
-          aria-labelledby="modal-title"
         >
           {/* Modal header */}
           {(title || showCloseButton) && (
-            <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${headerClassName}`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 ${headerClassName}`}>
               {title && (
-                <h3 
-                  className="text-lg font-medium text-gray-900 dark:text-gray-100" 
-                  id="modal-title"
-                >
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100" id="modal-title">
                   {title}
                 </h3>
               )}
+              
               {showCloseButton && (
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 p-1 rounded-full"
                   onClick={onClose}
+                  className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 p-1 rounded-full ml-auto"
                   aria-label="Close modal"
                 >
                   <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,8 +253,8 @@ const Modal: React.FC<ModalProps> = ({
     </div>
   );
   
-  // Use createPortal to render the modal at the document body level
-  return createPortal(modalElement, document.body);
+  // Render the modal using a portal
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

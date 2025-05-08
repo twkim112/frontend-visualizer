@@ -28,11 +28,16 @@ module.exports = {
           '0%, 100%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.3)' },
         },
+        'modal-appear': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
       animation: {
         'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-medium': 'pulse-medium 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-strong': 'pulse-strong 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'modal-appear': 'modal-appear 0.3s ease-out forwards',
       },
     },
   },

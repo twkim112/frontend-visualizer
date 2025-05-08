@@ -10,13 +10,16 @@ export function generateStaticParams() {
   }));
 }
 
-export default function ComponentDetailPage({ 
+export default async function ComponentDetailPage({ 
   params 
 }: { 
   params: { category: string; slug: string } 
 }) {
+  // Using await to properly handle dynamic route parameters
+  const { category, slug } = await Promise.resolve(params);
+  
   const visual = visuals.find(v => 
-    v.category === params.category && v.slug === params.slug
+    v.category === category && v.slug === slug
   );
   
   if (!visual) {
