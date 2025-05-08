@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node setup-component-categories.js",
     "dev": "next dev --turbopack",
+    "prebuild": "node setup-component-categories.js",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-categories": "node setup-component-categories.js"
   },
   "dependencies": {
     "react": "^19.0.0",

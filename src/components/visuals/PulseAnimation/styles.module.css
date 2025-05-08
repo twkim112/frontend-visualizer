@@ -1,0 +1,75 @@
+/* Pulse animation keyframes */
+@keyframes pulseSubtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulseMedium {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes pulseStrong {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* Pulse animation classes */
+.pulseSubtle {
+  animation: pulseSubtle 2s ease-in-out infinite;
+}
+
+.pulseMedium {
+  animation: pulseMedium 2s ease-in-out infinite;
+}
+
+.pulseStrong {
+  animation: pulseStrong 2s ease-in-out infinite;
+}
+
+/* Base ripple class */
+.ripple {
+  position: absolute;
+  border-radius: 9999px; /* full rounded */
+}
+
+/* Color variants */
+.colorBlue {
+  background-color: rgba(59, 130, 246, 0.3); /* blue-500 with opacity */
+}
+
+.colorRed {
+  background-color: rgba(239, 68, 68, 0.3); /* red-500 with opacity */
+}
+
+.colorGreen {
+  background-color: rgba(34, 197, 94, 0.3); /* green-500 with opacity */
+}
+
+.colorPurple {
+  background-color: rgba(168, 85, 247, 0.3); /* purple-500 with opacity */
+}
+
+.colorOrange {
+  background-color: rgba(249, 115, 22, 0.3); /* orange-500 with opacity */
+}
+
+.colorPink {
+  background-color: rgba(236, 72, 153, 0.3); /* pink-500 with opacity */
+}
+
+/* Size variants */
+.sizeSm {
+  width: 3.5rem; /* w-14 */
+  height: 3.5rem; /* h-14 */
+}
+
+.sizeMd {
+  width: 5rem; /* w-20 */
+  height: 5rem; /* h-20 */
+}
+
+.sizeLg {
+  width: 8rem; /* w-32 */
+  height: 8rem; /* h-32 */
+}

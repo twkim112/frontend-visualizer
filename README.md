@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend Visualizer
+
+Frontend Visualizer is an intuitive, static web-based catalog designed to empower "vibe coders," designers, and developers who think visually. The core mission is to bridge the gap between visual concepts for UI elements/effects and their corresponding technical names.
+
+## Project Overview
+
+Many individuals know what they want a feature to look or feel like but struggle to find the correct terminology to search for examples, tutorials, or implementations. Frontend Visualizer serves as a comprehensive visual dictionary, showcasing UI components, visual effects, and interaction patterns with clear visual examples.
+
+### Features
+
+- **Visual Component Catalog**: Browse through components categorized by function and appearance
+- **Clear Technical Terminology**: Each component displays its proper name and common aliases
+- **Visual First Approach**: Identify components by sight and learn their proper names
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Tech Stack
+
+- **Framework**: Next.js with TypeScript
+- **Styling**: Tailwind CSS
+- **Deployment**: Ready for static site generation
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (LTS version recommended)
+- npm or yarn
+
+### Installation
 
 ```bash
+# Clone the repository (if applicable)
+git clone <repository-url>
+cd frontend-visualizer
+
+# Install dependencies
+npm install
+# or
+yarn install
+```
+
+### Development
+
+```bash
+# Run the development server
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/src/app` - Next.js app router pages
+- `/src/components` - Reusable UI components
+  - `/src/components/layout` - Layout components (header, footer)
+  - `/src/components/visuals` - Visual examples of UI components
+- `/src/data` - Data structures for the visual components catalog
 
-## Learn More
+## Component Categories
 
-To learn more about Next.js, take a look at the following resources:
+1. **Navigation Systems**: Menus, tabs, breadcrumbs, and navigation controls
+2. **Input Controls**: Buttons, form elements, and interactive inputs
+3. **Feedback Elements**: Alerts, notifications, and status indicators
+4. **Content Organization**: Cards, containers, and layout structures
+5. **Animation & Effects**: Transitions, hover effects, and visual animations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This application is configured for static site generation, making it ideal for deployment on platforms like Vercel, Netlify, or GitHub Pages.
 
-## Deploy on Vercel
+```bash
+# Build the static site
+npm run build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Preview the built site locally
+npm run start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+Contributions are welcome! To add new components to the catalog:
+
+1. Update the component data in `/src/data/visuals.ts`
+2. Create the visual component in `/src/components/visuals/{ComponentName}`
+3. Test the component appearance and responsiveness
+
+## License
+
+MIT
