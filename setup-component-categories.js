@@ -27,18 +27,23 @@ const categoryDefinitions = {
 // Known component categorization
 const knownComponentCategories = {
   // Navigation components
+  'Navbar': { category: 'navigation', subcategory: 'navbar' },
+  'Stepper': { category: 'navigation', subcategory: 'stepper' },
+  'Tabs': { category: 'navigation', subcategory: 'tabs' },
   'HamburgerMenu': { category: 'navigation', subcategory: 'hamburger-menu' },
   'Breadcrumbs': { category: 'navigation', subcategory: 'breadcrumbs' },
-  'Tabs': { category: 'navigation', subcategory: 'tabs' },
-  'Navbar': { category: 'navigation', subcategory: 'navbar' },
   
   // Input components
   'TextInput': { category: 'input', subcategory: 'text-input' },
   'Button': { category: 'input', subcategory: 'button' },
   'DropdownSelect': { category: 'input', subcategory: 'dropdown-select' },
+  'Slider': { category: 'input', subcategory: 'slider' },
+  'DatePicker': { category: 'input', subcategory: 'date-picker' },
   
   // Feedback & display components
   'Alert': { category: 'feedback', subcategory: 'alert' },
+  'Badge': { category: 'feedback', subcategory: 'badge' },
+  'Popover': { category: 'feedback', subcategory: 'popover' },
   'ToastNotification': { category: 'feedback', subcategory: 'toast-notification' },
   'ProgressBar': { category: 'feedback', subcategory: 'progress-bar' },
   'Tooltip': { category: 'feedback', subcategory: 'tooltip' },

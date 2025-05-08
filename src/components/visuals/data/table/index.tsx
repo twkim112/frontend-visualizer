@@ -1,572 +1,512 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 
-// Types for the Table component
-type TableVariant = 'simple' | 'striped' | 'bordered' | 'hoverable';
-type TableSize = 'small' | 'medium' | 'large';
-type SortDirection = 'asc' | 'desc' | null;
-
-interface Column {
-  key: string;
-  header: React.ReactNode;
-  width?: string;
+// Define the type for column configuration
+interface TableColumn<T> {
+  header: string;
+  accessor: keyof T | ((row: T) => React.ReactNode);
   sortable?: boolean;
-  render?: (value: any, row: any, index: number) => React.ReactNode;
+  cellClassName?: string;
+  headerClassName?: string;
 }
 
-interface TableProps {
-  columns: Column[];
-  data: any[];
-  variant?: TableVariant;
-  size?: TableSize;
+// Define the type for table properties
+interface TableProps<T> {
+  columns: TableColumn<T>[];
+  data: T[];
   className?: string;
-  headerClassName?: string;
-  rowClassName?: string;
-  cellClassName?: string;
-  bordered?: boolean;
   striped?: boolean;
   hoverable?: boolean;
-  sortable?: boolean;
-  responsive?: boolean;
-  emptyText?: React.ReactNode;
+  bordered?: boolean;
+  compact?: boolean;
   loading?: boolean;
-  onRowClick?: (row: any, index: number) => void;
+  emptyMessage?: string;
+  sortable?: boolean;
+  stickyHeader?: boolean;
+  caption?: string;
+  headerPosition?: 'top' | 'left';
+  onRowClick?: (row: T) => void;
+  rowClassName?: string | ((row: T) => string);
+  rowKey?: keyof T | ((row: T) => string);
 }
 
 /**
  * Table Component
  * 
- * A structured grid of rows and columns for organizing and displaying structured data.
+ * A component for displaying structured data in rows and columns.
+ * Provides features like sorting, custom cell rendering, and various styling options.
  * 
- * @param columns - Array of column definitions with header text and data keys
- * @param data - Array of data objects to display in the table
- * @param variant - Visual style variant of the table
- * @param size - Size variant controlling padding and text size
- * @param className - Additional CSS class for the table container
- * @param headerClassName - Additional CSS class for the table header
- * @param rowClassName - Additional CSS class for the table rows
- * @param cellClassName - Additional CSS class for the table cells
+ * @param columns - Configuration for table columns
+ * @param data - Array of data objects to display
+ * @param className - Additional CSS classes for the table
+ * @param striped - Whether to apply striped rows
+ * @param hoverable - Whether to apply hover effect on rows
  * @param bordered - Whether to show borders around cells
- * @param striped - Whether to use alternating row backgrounds
- * @param hoverable - Whether rows highlight on hover
- * @param sortable - Whether columns can be sorted
- * @param responsive - Whether the table has horizontal scrolling on small screens
- * @param emptyText - Text to display when there is no data
- * @param loading - Whether the table is in a loading state
- * @param onRowClick - Callback function when a row is clicked
+ * @param compact - Whether to use compact spacing
+ * @param loading - Whether the table is in loading state
+ * @param emptyMessage - Message to display when there's no data
+ * @param sortable - Whether the table supports sorting
+ * @param stickyHeader - Whether to make the header sticky
+ * @param caption - Optional caption for the table
+ * @param headerPosition - Position of header cells ('top' or 'left')
+ * @param onRowClick - Callback for when a row is clicked
+ * @param rowClassName - Class name for rows (string or function)
+ * @param rowKey - Property or function to generate unique keys for rows
  */
-const Table: React.FC<TableProps> = ({
-  columns,
-  data,
-  variant = 'simple',
-  size = 'medium',
+function Table<T extends Record<string, any>>({ 
+  columns, 
+  data, 
   className = '',
-  headerClassName = '',
-  rowClassName = '',
-  cellClassName = '',
-  bordered = false,
   striped = false,
   hoverable = false,
-  sortable = false,
-  responsive = true,
-  emptyText = 'No data available',
+  bordered = false,
+  compact = false,
   loading = false,
+  emptyMessage = 'No data available',
+  sortable = true,
+  stickyHeader = false,
+  caption,
+  headerPosition = 'top',
   onRowClick,
-}) => {
-  // Apply variant properties
-  useEffect(() => {
-    if (variant === 'bordered') bordered = true;
-    if (variant === 'striped') striped = true;
-    if (variant === 'hoverable') hoverable = true;
-  }, [variant]);
-  
+  rowClassName,
+  rowKey,
+}: TableProps<T>) {
   // State for sorting
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: SortDirection }>({
-    key: '',
-    direction: null,
-  });
-  
-  // Handle column sorting
-  const handleSort = (key: string) => {
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof T | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
+
+  // Handle column sort
+  const handleSort = (accessor: keyof T) => {
     if (!sortable) return;
     
-    let direction: SortDirection = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = null;
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === accessor) {
+      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
     }
     
-    setSortConfig({ key, direction });
+    setSortConfig({ key: accessor, direction });
   };
-  
-  // Sort data based on sort configuration
-  const sortedData = React.useMemo(() => {
-    if (!sortConfig.direction) return data;
+
+  // Generate the sorted data based on sort config
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return data;
     
     return [...data].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
+      const aValue = a[sortConfig.key as keyof T];
+      const bValue = b[sortConfig.key as keyof T];
+      
+      if (aValue === bValue) return 0;
+      
+      // Handle different data types
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
+      
+      return sortConfig.direction === 'asc' 
+        ? (aValue < bValue ? -1 : 1) 
+        : (bValue < aValue ? -1 : 1);
     });
   }, [data, sortConfig]);
-  
-  // Get size classes
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'small': return 'text-xs p-1';
-      case 'medium': return 'text-sm p-2';
-      case 'large': return 'text-base p-3';
-      default: return 'text-sm p-2';
+
+  // Generate row key
+  const getRowKey = (row: T, index: number): string => {
+    if (rowKey) {
+      if (typeof rowKey === 'function') {
+        return rowKey(row);
+      }
+      return String(row[rowKey]);
     }
+    return index.toString();
   };
-  
-  // Render sort indicator
-  const renderSortIndicator = (column: Column) => {
-    if (!sortable || !column.sortable) return null;
+
+  // Get row class name
+  const getRowClassName = (row: T, index: number): string => {
+    let baseClasses = [
+      hoverable ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : '',
+      striped && index % 2 ? 'bg-gray-50 dark:bg-gray-800' : '',
+      onRowClick ? 'cursor-pointer' : '',
+    ].filter(Boolean).join(' ');
     
-    if (sortConfig.key !== column.key) {
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
+    if (rowClassName) {
+      const customClass = typeof rowClassName === 'function' 
+        ? rowClassName(row) 
+        : rowClassName;
+      
+      baseClasses = `${baseClasses} ${customClass}`.trim();
     }
     
-    if (sortConfig.direction === 'asc') {
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        </svg>
-      );
-    }
-    
-    if (sortConfig.direction === 'desc') {
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      );
-    }
-    
-    return null;
+    return baseClasses;
   };
-  
-  // Empty state
-  if (!loading && (!data || data.length === 0)) {
-    return (
-      <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-        {emptyText}
-      </div>
-    );
-  }
-  
-  // Loading state
-  if (loading) {
-    return (
-      <div className="text-center py-10">
-        <div className="inline-block animate-spin h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full"></div>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Loading data...</p>
-      </div>
-    );
-  }
-  
-  // Table component
+
+  // Get cell content
+  const getCellContent = (row: T, column: TableColumn<T>) => {
+    if (typeof column.accessor === 'function') {
+      return column.accessor(row);
+    }
+    
+    return row[column.accessor];
+  };
+
+  // Table classes
+  const tableClasses = [
+    'w-full',
+    'table-auto',
+    bordered ? 'border-collapse' : 'border-separate',
+    className,
+  ].filter(Boolean).join(' ');
+
+  // Cell classes
+  const cellClasses = [
+    'px-4',
+    compact ? 'py-2' : 'py-3',
+    bordered ? 'border dark:border-gray-700' : '',
+  ].filter(Boolean).join(' ');
+
+  // Header classes
+  const headerClasses = [
+    'px-4',
+    compact ? 'py-2' : 'py-3',
+    'font-medium',
+    'text-left',
+    'text-gray-700 dark:text-gray-300',
+    bordered ? 'border dark:border-gray-700' : 'border-b dark:border-gray-700',
+    stickyHeader ? 'sticky top-0 bg-white dark:bg-gray-900 z-10' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={`${responsive ? 'overflow-x-auto' : ''} ${className}`}>
-      <table className={`w-full ${bordered ? 'border border-gray-200 dark:border-gray-700' : ''}`}>
-        <thead className={`bg-gray-50 dark:bg-gray-800 ${headerClassName}`}>
-          <tr>
-            {columns.map((column, index) => (
-              <th
-                key={index}
-                className={`
-                  text-left font-medium text-gray-600 dark:text-gray-300
-                  ${getSizeClasses()}
-                  ${bordered ? 'border border-gray-200 dark:border-gray-700' : 'border-b border-gray-200 dark:border-gray-700'}
-                  ${column.sortable && sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : ''}
-                  ${column.width ? column.width : ''}
-                `}
-                onClick={() => column.sortable && sortable && handleSort(column.key)}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>{column.header}</span>
-                  {column.sortable && sortable && (
-                    <span className="ml-1">{renderSortIndicator(column)}</span>
-                  )}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
+    <div className="w-full overflow-x-auto">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 z-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+      
+      <table className={tableClasses}>
+        {caption && (
+          <caption className="text-sm text-gray-600 dark:text-gray-400 p-2 text-left">
+            {caption}
+          </caption>
+        )}
         
-        <tbody>
-          {sortedData.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={`
-                ${striped && rowIndex % 2 !== 0 ? 'bg-gray-50 dark:bg-gray-800' : ''}
-                ${hoverable ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''}
-                ${onRowClick ? 'cursor-pointer' : ''}
-                ${rowClassName}
-              `}
-              onClick={() => onRowClick && onRowClick(row, rowIndex)}
-            >
+        {headerPosition === 'top' && (
+          <thead>
+            <tr>
               {columns.map((column, colIndex) => (
-                <td
-                  key={colIndex}
-                  className={`
-                    ${getSizeClasses()}
-                    ${bordered ? 'border border-gray-200 dark:border-gray-700' : 'border-b border-gray-200 dark:border-gray-700'}
-                    ${cellClassName}
-                  `}
+                <th 
+                  key={colIndex} 
+                  className={`${headerClasses} ${column.headerClassName || ''}`}
+                  onClick={() => {
+                    if (column.sortable !== false && typeof column.accessor !== 'function') {
+                      handleSort(column.accessor as keyof T);
+                    }
+                  }}
+                  style={{
+                    cursor: column.sortable !== false && typeof column.accessor !== 'function' && sortable ? 'pointer' : 'default',
+                  }}
                 >
-                  {column.render
-                    ? column.render(row[column.key], row, rowIndex)
-                    : row[column.key]}
-                </td>
+                  <div className="flex items-center justify-between">
+                    <span>{column.header}</span>
+                    
+                    {column.sortable !== false && 
+                     typeof column.accessor !== 'function' && 
+                     sortable && 
+                     sortConfig.key === column.accessor && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
               ))}
             </tr>
-          ))}
+          </thead>
+        )}
+        
+        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          {sortedData.length > 0 ? (
+            sortedData.map((row, rowIndex) => (
+              <tr 
+                key={getRowKey(row, rowIndex)}
+                className={getRowClassName(row, rowIndex)}
+                onClick={() => onRowClick && onRowClick(row)}
+              >
+                {columns.map((column, colIndex) => {
+                  if (headerPosition === 'left' && colIndex === 0) {
+                    return (
+                      <th 
+                        key={colIndex} 
+                        className={`${headerClasses} ${column.headerClassName || ''}`}
+                      >
+                        {getCellContent(row, column)}
+                      </th>
+                    );
+                  }
+                  
+                  return (
+                    <td 
+                      key={colIndex} 
+                      className={`${cellClasses} ${column.cellClassName || ''}`}
+                    >
+                      {getCellContent(row, column)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td 
+                colSpan={columns.length} 
+                className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
+              >
+                {emptyMessage}
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
   );
-};
+}
 
-// Example component to showcase the Table
+/**
+ * Example component to showcase the Table with different configurations and data
+ */
 const TableExample: React.FC = () => {
-  // Demo state
-  const [variant, setVariant] = useState<TableVariant>('simple');
-  const [size, setSize] = useState<TableSize>('medium');
-  const [bordered, setBordered] = useState(false);
-  const [striped, setStriped] = useState(false);
-  const [hoverable, setHoverable] = useState(false);
-  const [sortable, setSortable] = useState(true);
-  const [loading, setLoading] = useState(false);
-  
-  // Set variant options
-  useEffect(() => {
-    switch (variant) {
-      case 'bordered':
-        setBordered(true);
-        setStriped(false);
-        setHoverable(false);
-        break;
-      case 'striped':
-        setBordered(false);
-        setStriped(true);
-        setHoverable(false);
-        break;
-      case 'hoverable':
-        setBordered(false);
-        setStriped(false);
-        setHoverable(true);
-        break;
-      default:
-        setBordered(false);
-        setStriped(false);
-        setHoverable(false);
-    }
-  }, [variant]);
-  
-  // Sample columns
-  const columns = [
-    {
-      key: 'id',
-      header: 'ID',
-      width: 'w-16',
+  // Sample data for the table
+  const users = [
+    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active' },
+    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User', status: 'Inactive' },
+    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Editor', status: 'Active' },
+    { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'User', status: 'Active' },
+    { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'Moderator', status: 'Inactive' },
+  ];
+
+  // Define user type for strong typing
+  type UserData = typeof users[0];
+
+  // Column definitions
+  const columns: TableColumn<UserData>[] = [
+    { 
+      header: 'ID', 
+      accessor: 'id',
       sortable: true,
     },
-    {
-      key: 'name',
-      header: 'Name',
+    { 
+      header: 'Name', 
+      accessor: 'name',
       sortable: true,
     },
-    {
-      key: 'email',
-      header: 'Email',
+    { 
+      header: 'Email', 
+      accessor: 'email',
       sortable: true,
     },
-    {
-      key: 'role',
-      header: 'Role',
+    { 
+      header: 'Role', 
+      accessor: 'role',
       sortable: true,
     },
-    {
-      key: 'status',
-      header: 'Status',
-      sortable: true,
-      render: (value: string) => (
-        <span className={`
-          inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-          ${value === 'Active' 
-            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' 
-            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}
-        `}>
-          {value}
+    { 
+      header: 'Status', 
+      accessor: (row: UserData) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          row.status === 'Active' 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+        }`}>
+          {row.status}
         </span>
       ),
+      sortable: false,
     },
     {
-      key: 'actions',
       header: 'Actions',
-      render: () => (
+      accessor: (row: UserData) => (
         <div className="flex space-x-2">
-          <button className="text-blue-500 hover:text-blue-700">Edit</button>
-          <button className="text-red-500 hover:text-red-700">Delete</button>
+          <button className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+            Edit
+          </button>
+          <button className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+            Delete
+          </button>
         </div>
       ),
-    },
+      sortable: false,
+    }
   ];
-  
-  // Sample data
-  const data = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Developer', status: 'Active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Designer', status: 'Active' },
-    { id: 3, name: 'Robert Johnson', email: 'robert@example.com', role: 'Manager', status: 'Inactive' },
-    { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: 'Developer', status: 'Active' },
-    { id: 5, name: 'Michael Wilson', email: 'michael@example.com', role: 'Designer', status: 'Inactive' },
-  ];
-  
-  // Row click handler
-  const handleRowClick = (row: any) => {
-    alert(`Clicked on ${row.name}`);
+
+  // Track table options state
+  const [options, setOptions] = useState({
+    striped: true,
+    hoverable: true,
+    bordered: false,
+    compact: false,
+    loading: false,
+    stickyHeader: false,
+  });
+
+  // Toggle an option
+  const toggleOption = (option: keyof typeof options) => {
+    setOptions(prev => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
   };
-  
-  // Toggle loading state demo
-  const toggleLoading = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
+
+  // Define extended user type for sample data
+  interface ExtendedUserData extends UserData {
+    lastLogin?: string;
+  }
+
+  // Sample row click handler
+  const handleRowClick = (row: UserData) => {
+    console.log('Row clicked:', row);
   };
-  
+
+  // Generate sample data with more rows for the second example
+  const generateSampleData = (count: number): ExtendedUserData[] => {
+    const data: ExtendedUserData[] = [];
+    const roles = ['User', 'Admin', 'Editor', 'Viewer', 'Moderator'];
+    const statuses = ['Active', 'Inactive', 'Pending', 'Suspended'];
+    
+    for (let i = 1; i <= count; i++) {
+      data.push({
+        id: i,
+        name: `User ${i}`,
+        email: `user${i}@example.com`,
+        role: roles[Math.floor(Math.random() * roles.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        lastLogin: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toLocaleDateString(),
+      });
+    }
+    
+    return data;
+  };
+
+  // Calculate dynamic row class for the third example
+  const getRowClass = (row: ExtendedUserData): string => {
+    if (row.status === 'Suspended') return 'bg-red-50 dark:bg-red-900 dark:bg-opacity-20';
+    if (row.status === 'Pending') return 'bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20';
+    return '';
+  };
+
   return (
-    <div className="space-y-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Table Demo</h2>
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow space-y-8">
+      <h2 className="text-xl font-semibold mb-4">Table Examples</h2>
       
       {/* Configuration Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Variant Selection */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Variant</label>
-          <div className="flex flex-wrap gap-2">
-            {(['simple', 'bordered', 'striped', 'hoverable'] as TableVariant[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setVariant(v)}
-                className={`
-                  px-3 py-1 text-sm rounded-md
-                  ${variant === v
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}
-                `}
-              >
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Size Selection */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Size</label>
-          <div className="flex space-x-2">
-            {(['small', 'medium', 'large'] as TableSize[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSize(s)}
-                className={`
-                  px-3 py-1 text-sm rounded-md
-                  ${size === s
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}
-                `}
-              >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Options */}
-        <div className="md:col-span-2 flex flex-wrap gap-6">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={sortable}
-              onChange={(e) => setSortable(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span>Sortable</span>
-          </label>
-          
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={bordered}
-              onChange={(e) => {
-                setBordered(e.target.checked);
-                if (e.target.checked) setVariant('bordered');
-                else if (variant === 'bordered') setVariant('simple');
-              }}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span>Bordered</span>
-          </label>
-          
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={striped}
-              onChange={(e) => {
-                setStriped(e.target.checked);
-                if (e.target.checked) setVariant('striped');
-                else if (variant === 'striped') setVariant('simple');
-              }}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span>Striped</span>
-          </label>
-          
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={hoverable}
-              onChange={(e) => {
-                setHoverable(e.target.checked);
-                if (e.target.checked) setVariant('hoverable');
-                else if (variant === 'hoverable') setVariant('simple');
-              }}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span>Hoverable</span>
-          </label>
-          
-          <button
-            onClick={toggleLoading}
-            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Toggle Loading State
-          </button>
+      <div className="mb-6">
+        <h3 className="text-lg font-medium mb-3">Table Options</h3>
+        <div className="flex flex-wrap gap-4">
+          {Object.entries(options).map(([key, value]) => (
+            <label key={key} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={value}
+                onChange={() => toggleOption(key as keyof typeof options)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="ml-2 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+            </label>
+          ))}
         </div>
       </div>
       
-      {/* Table Example */}
-      <div>
-        <h3 className="text-lg font-medium mb-3">Basic Table</h3>
+      {/* Basic Table Example */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-4">Basic Table</h3>
         <Table
           columns={columns}
-          data={data}
-          variant={variant}
-          size={size}
-          bordered={bordered}
-          striped={striped}
-          hoverable={hoverable}
-          sortable={sortable}
-          loading={loading}
+          data={users}
+          striped={options.striped}
+          hoverable={options.hoverable}
+          bordered={options.bordered}
+          compact={options.compact}
+          loading={options.loading}
+          stickyHeader={options.stickyHeader}
           onRowClick={handleRowClick}
+          caption="Table 1: User Information"
         />
       </div>
       
-      {/* Common Use Cases */}
-      <div className="pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-medium mb-4">Common Use Cases</h3>
-        
-        <div className="space-y-8">
-          {/* Simple Data Table */}
-          <div>
-            <h4 className="text-md font-medium mb-2">Simple Data Table</h4>
-            <Table
-              columns={[
-                { key: 'id', header: 'ID', width: 'w-16' },
-                { key: 'name', header: 'Name' },
-                { key: 'value', header: 'Value' },
-              ]}
-              data={[
-                { id: 1, name: 'Item 1', value: 42 },
-                { id: 2, name: 'Item 2', value: 18 },
-                { id: 3, name: 'Item 3', value: 95 },
-              ]}
-              variant="simple"
-              size="small"
-            />
-          </div>
-          
-          {/* Data Grid with Custom Rendering */}
-          <div>
-            <h4 className="text-md font-medium mb-2">Data Grid with Progress</h4>
-            <Table
-              columns={[
-                { key: 'project', header: 'Project' },
-                { key: 'status', header: 'Status' },
-                {
-                  key: 'progress',
-                  header: 'Progress',
-                  render: (value: number) => (
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                      <div
-                        className="bg-blue-600 h-2.5 rounded-full"
-                        style={{ width: `${value}%` }}
-                      ></div>
-                    </div>
-                  ),
-                },
-                {
-                  key: 'priority',
-                  header: 'Priority',
-                  render: (value: string) => {
-                    const colors = {
-                      high: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                      medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                      low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                    };
-                    const color = colors[value as keyof typeof colors] || '';
-                    return (
-                      <span className={`px-2 py-1 text-xs rounded-full ${color}`}>
-                        {value}
-                      </span>
-                    );
-                  },
-                },
-              ]}
-              data={[
-                { project: 'Website Redesign', status: 'In Progress', progress: 75, priority: 'high' },
-                { project: 'Mobile App', status: 'Planning', progress: 25, priority: 'medium' },
-                { project: 'API Integration', status: 'Completed', progress: 100, priority: 'low' },
-              ]}
-              variant="bordered"
-              size="medium"
-            />
-          </div>
-          
-          {/* Responsive Table */}
-          <div>
-            <h4 className="text-md font-medium mb-2">Responsive Table</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Resize your window to see the table adapt with horizontal scrolling.</p>
-            <div className="max-w-md">
-              <Table
-                columns={[
-                  { key: 'name', header: 'Name' },
-                  { key: 'email', header: 'Email' },
-                  { key: 'phone', header: 'Phone' },
-                  { key: 'location', header: 'Location' },
-                  { key: 'department', header: 'Department' },
-                ]}
-                data={[
-                  { name: 'John Doe', email: 'john@example.com', phone: '(555) 123-4567', location: 'New York', department: 'Engineering' },
-                  { name: 'Jane Smith', email: 'jane@example.com', phone: '(555) 765-4321', location: 'San Francisco', department: 'Design' },
-                ]}
-                variant="striped"
-                responsive={true}
-              />
-            </div>
-          </div>
+      {/* Table with Many Rows and Sticky Header */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-4">Table with Many Rows</h3>
+        <div className="h-80 overflow-y-auto">
+          <Table
+            columns={columns}
+            data={generateSampleData(50)}
+            striped
+            hoverable
+            stickyHeader
+          />
         </div>
+      </div>
+      
+      {/* Table with Row Styles Based on Data */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-4">Table with Conditional Row Styling</h3>
+        <Table
+          columns={columns}
+          data={generateSampleData(10)}
+          rowClassName={getRowClass}
+          bordered
+        />
+      </div>
+      
+      {/* Table with Left Headers */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-4">Table with Left Headers</h3>
+        {/* Define property data type */}
+        {(() => {
+          type PropertyData = {
+            property: string;
+            value: string;
+            description: string;
+          };
+          
+          const propertyColumns: TableColumn<PropertyData>[] = [
+            { header: 'Property', accessor: 'property' },
+            { header: 'Value', accessor: 'value' },
+            { header: 'Description', accessor: 'description' },
+          ];
+          
+          const propertyData: PropertyData[] = [
+            { property: 'Name', value: 'Product X', description: 'Official product name' },
+            { property: 'Category', value: 'Electronics', description: 'Product category in catalog' },
+            { property: 'Price', value: '$299.99', description: 'Retail price before tax' },
+            { property: 'Stock', value: '143 units', description: 'Current inventory count' },
+            { property: 'Rating', value: '4.5/5', description: 'Average customer rating' },
+          ];
+          
+          return (
+            <Table
+              columns={propertyColumns}
+              data={propertyData}
+              headerPosition="left"
+              bordered
+            />
+          );
+        })()}
+      </div>
+      
+      {/* Empty Table */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-4">Empty Table</h3>
+        <Table
+          columns={columns}
+          data={[] as UserData[]}
+          emptyMessage="No users found. Try adjusting your filters."
+          striped
+          hoverable
+        />
       </div>
     </div>
   );
