@@ -64,6 +64,15 @@ export const visuals: Visual[] = [
     tags: ['navigation', 'pages', 'results', 'content-division'],
     componentPath: 'visuals/Pagination',
   },
+  {
+    name: 'Toolbar',
+    slug: 'toolbar',
+    category: 'navigation',
+    description: 'A container for a set of related actions or controls, providing quick access to frequently used functions.',
+    altNames: ['Action Bar', 'Command Bar', 'Tool Strip'],
+    tags: ['navigation', 'controls', 'actions', 'buttons', 'interface'],
+    componentPath: 'visuals/Toolbar',
+  },
   
   // Input Components
   {
@@ -101,6 +110,15 @@ export const visuals: Visual[] = [
     altNames: ['Input Field', 'Text Field', 'Text Box'],
     tags: ['input', 'form', 'text', 'data-entry'],
     componentPath: 'visuals/TextInput',
+  },
+  {
+    name: 'Quantity Stepper',
+    slug: 'quantity-stepper',
+    category: 'input',
+    description: 'A quantity input control that allows users to increment or decrement a value with plus and minus buttons.',
+    altNames: ['Number Input', 'Quantity Selector', 'Counter Input', 'Increment Decrement Control', 'Stepper'],
+    tags: ['input', 'form', 'numeric', 'counter', 'quantity'],
+    componentPath: 'visuals/Stepper',
   },
   {
     name: 'Dropdown Select',
@@ -186,6 +204,15 @@ export const visuals: Visual[] = [
     componentPath: 'visuals/Popover',
   },
   {
+    name: 'Banner',
+    slug: 'banner',
+    category: 'feedback',
+    description: 'A full-width message that appears at the top, bottom, or within a page to communicate important information or announcements.',
+    altNames: ['Announcement Bar', 'Notification Strip', 'Message Bar'],
+    tags: ['feedback', 'message', 'announcement', 'notification', 'full-width'],
+    componentPath: 'visuals/Banner',
+  },
+  {
     name: 'Toast Notification',
     slug: 'toast-notification',
     category: 'feedback',
@@ -231,6 +258,15 @@ export const visuals: Visual[] = [
     altNames: ['Tile', 'Panel', 'Content Box'],
     tags: ['container', 'layout', 'grouping'],
     componentPath: 'visuals/Card',
+  },
+  {
+    name: 'Bento Grid',
+    slug: 'bento-grid',
+    category: 'container',
+    description: 'A modern layout structure that arranges content in an asymmetrical grid pattern, similar to Japanese bento lunch boxes. Used for dashboards, homepages, and content showcases.',
+    altNames: ['Asymmetric Grid', 'Card Grid', 'Module Grid'],
+    tags: ['container', 'layout', 'grid', 'modern', 'dashboard'],
+    componentPath: 'visuals/BentoGrid',
   },
   {
     name: 'Accordion',
@@ -324,5 +360,14 @@ export const visuals: Visual[] = [
     altNames: ['Parallax Scrolling', 'Multi-layer Scrolling', 'Depth Scrolling'],
     tags: ['animation', 'scroll', 'depth', 'immersion', 'layers'],
     componentPath: 'visuals/ParallaxEffect',
+  },
+  {
+    name: 'Card Flip',
+    slug: 'card-flip',
+    category: 'animation',
+    description: 'A 3D animation effect where a card rotates to reveal content on its reverse side, creating the illusion of flipping a physical card.',
+    altNames: ['3D Flip', 'Flip Animation', 'Card Rotate'],
+    tags: ['animation', '3d', 'transform', 'interactive', 'rotation'],
+    componentPath: 'visuals/CardFlip',
   }
 ];

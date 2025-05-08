@@ -582,7 +582,7 @@ const StepperExample: React.FC = () => {
               <h5 className="font-medium mb-2">Preferences</h5>
               <div className="space-y-3">
                 <label className="flex items-center">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked />
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" defaultChecked />
                   <span className="ml-2">Receive email notifications</span>
                 </label>
                 <label className="flex items-center">
@@ -590,7 +590,7 @@ const StepperExample: React.FC = () => {
                   <span className="ml-2">Subscribe to newsletter</span>
                 </label>
                 <label className="flex items-center">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked />
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" defaultChecked />
                   <span className="ml-2">Enable two-factor authentication</span>
                 </label>
               </div>

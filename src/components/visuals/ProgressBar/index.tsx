@@ -67,8 +67,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     getColorClass(),
     'transition-all duration-300 ease-in-out h-full',
     rounded ? 'rounded-full' : '',
-    striped ? 'bg-stripes' : '',
-    animated ? 'animate-pulse' : '',
+    striped ? 'progress-bar-striped' : '',
+    striped && animated ? 'progress-bar-animated' : '',
+    animated && !striped ? 'animate-pulse' : '',
     barClassName
   ].filter(Boolean).join(' ');
   
@@ -86,11 +87,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           className={progressBarClasses}
           style={{ width: `${validProgress}%` }}
         >
-          {striped && (
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="w-full h-full bg-stripes-white opacity-20"></div>
-            </div>
-          )}
+          {/* Striping is handled via CSS pseudo-elements */}
         </div>
       </div>
       
@@ -111,22 +108,19 @@ const ProgressBarStripedAnimation = () => (
       100% { background-position: 16px 0; }
     }
     
-    .bg-stripes {
-      background-image: linear-gradient(
-        45deg,
-        rgba(255, 255, 255, 0.15) 25%,
-        transparent 25%,
-        transparent 50%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(255, 255, 255, 0.15) 75%,
-        transparent 75%,
-        transparent
-      );
-      background-size: 16px 16px;
-      animation: moveStripes 1s linear infinite;
+    /* Use pseudo-element for the striped appearance */
+    .progress-bar-striped {
+      position: relative;
+      overflow: hidden;
     }
     
-    .bg-stripes-white {
+    .progress-bar-striped::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background-image: linear-gradient(
         45deg,
         rgba(255, 255, 255, 0.15) 25%,
@@ -138,6 +132,11 @@ const ProgressBarStripedAnimation = () => (
         transparent
       );
       background-size: 16px 16px;
+    }
+    
+    /* Animation for the striped pattern */
+    .progress-bar-animated::before {
+      animation: moveStripes 1s linear infinite;
     }
   `}</style>
 );
