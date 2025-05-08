@@ -280,57 +280,16 @@ const Stepper: React.FC<StepperProps> = ({
     ${className}
   `.trim();
   
-  return (
-    <div 
-      className={stepperClasses}
-      role="navigation"
-      aria-label="Progress"
-    >
-      {steps.map((step, index) => {
-        const stepStatus = getStepStatus(index);
-        const showConnector = showConnectors && index < steps.length - 1;
-        
-        return (
-          <div 
-            key={index}
-            className={`
-              ${orientation === 'vertical' ? 'flex flex-row space-x-4' : alternateLabels && index % 2 !== 0 ? 'flex flex-col-reverse pt-10' : 'flex flex-col pt-0'}
-              ${orientation === 'vertical' ? 'items-start' : 'items-center'}
-              ${orientation === 'horizontal' ? 'flex-1' : ''}
-              relative
-            `}
-          >
-            {/* For horizontal orientation, wrap the step in a flex column div for centered alignment */}
-            {orientation === 'horizontal' ? (
-              <div className="flex flex-col items-center">
-                <Step
-                  label={step.label}
-                  description={step.description}
-                  status={stepStatus}
-                  icon={step.icon}
-                  showConnector={showConnector}
-                  onClick={clickable ? () => handleStepClick(index) : undefined}
-                  optional={step.optional}
-                  size={size}
-                  variant={variant}
-                  stepNumber={index + 1}
-                  totalSteps={steps.length}
-                />
-                
-                {/* Step label positioned directly below the step */}
-                <div className="mt-6 text-center w-full">
-                  <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
-                    {step.label}
-                    {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
-                  </div>
-                  {step.description && (
-                    <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
-                      {step.description}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
+  // For vertical orientation - original implementation with side-by-side layout
+  if (orientation === 'vertical') {
+    return (
+      <div className={stepperClasses} role="navigation" aria-label="Progress">
+        {steps.map((step, index) => {
+          const stepStatus = getStepStatus(index);
+          const showConnector = showConnectors && index < steps.length - 1;
+          
+          return (
+            <div key={index} className="flex flex-row space-x-4 items-start relative mb-6">
               <Step
                 label={step.label}
                 description={step.description}
@@ -344,10 +303,8 @@ const Stepper: React.FC<StepperProps> = ({
                 stepNumber={index + 1}
                 totalSteps={steps.length}
               />
-            )}
-            
-            {/* Labels for vertical orientation */}
-            {orientation === 'vertical' && (
+              
+              {/* Labels for vertical orientation */}
               <div className="flex-1">
                 <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
                   {step.label}
@@ -359,10 +316,71 @@ const Stepper: React.FC<StepperProps> = ({
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  
+  // For horizontal orientation - using a grid layout to ensure perfect alignment
+  return (
+    <div className={`${className} pb-16`} role="navigation" aria-label="Progress">
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${steps.length * 2 - 1}, auto)` }}>
+        {/* Step indicators and connectors row */}
+        <div className="flex w-full">
+          {steps.map((step, index) => {
+            const stepStatus = getStepStatus(index);
+            const isLast = index === steps.length - 1;
+            
+            return (
+              <React.Fragment key={index}>
+                {/* Each step gets a dedicated grid column */}
+                <div className="flex justify-center" style={{ gridColumn: index * 2 + 1 }}>
+                  <Step
+                    label={step.label}
+                    description={step.description}
+                    status={stepStatus}
+                    icon={step.icon}
+                    showConnector={false} // Handle connectors separately
+                    onClick={clickable ? () => handleStepClick(index) : undefined}
+                    optional={step.optional}
+                    size={size}
+                    variant={variant}
+                    stepNumber={index + 1}
+                    totalSteps={steps.length}
+                  />
+                </div>
+                
+                {/* Connector lines between steps */}
+                {!isLast && showConnectors && (
+                  <div 
+                    className={`flex-1 h-0.5 self-center ${getStepStatus(index) === 'completed' ? 'bg-green-500 dark:bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={{ gridColumn: index * 2 + 2, width: '100%' }}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        
+        {/* Labels and descriptions in a grid that precisely aligns with steps above */}
+        <div className="grid w-full mt-4" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
+          {steps.map((step, index) => (
+            <div key={`label-${index}`} className="text-center px-2" style={{ gridColumn: index + 1 }}>
+              <div className={`font-medium text-${size === 'small' ? 'sm' : 'base'}`}>
+                {step.label}
+                {step.optional && <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">(Optional)</span>}
+              </div>
+              {step.description && (
+                <div className={`text-gray-500 dark:text-gray-400 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
+                  {step.description}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
