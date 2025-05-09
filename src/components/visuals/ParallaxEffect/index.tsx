@@ -5,8 +5,121 @@
  */
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ParallaxEffect, { ParallaxEffectProps } from './ParallaxEffect';
+
+// Interactive version of the parallax effect that responds to mouse movement
+interface InteractiveParallaxDemoProps {
+  backgroundImage: string;
+  midgroundImage?: string;
+  foregroundImage?: string;
+}
+
+const InteractiveParallaxDemo: React.FC<InteractiveParallaxDemoProps> = ({
+  backgroundImage,
+  midgroundImage,
+  foregroundImage
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  // Smooth mouse tracking with requestAnimationFrame
+  const requestRef = useRef<number>();
+  const targetPositionRef = useRef({ x: 0, y: 0 });
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    // Calculate position as percentage (-0.5 to 0.5) centered around the middle
+    const x = ((e.clientX - left) / width - 0.5);
+    const y = ((e.clientY - top) / height - 0.5);
+    
+    targetPositionRef.current = { x, y };
+  };
+  
+  // Handle touch events for mobile
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!containerRef.current || !e.touches[0]) return;
+    
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    const x = ((e.touches[0].clientX - left) / width - 0.5);
+    const y = ((e.touches[0].clientY - top) / height - 0.5);
+    
+    targetPositionRef.current = { x, y };
+  };
+  
+  // Animation loop for smooth movement
+  const animate = (time: number) => {
+    // Smooth interpolation toward target position (easing factor of 0.08 for gentle movement)
+    setMousePosition(prev => ({
+      x: prev.x + (targetPositionRef.current.x - prev.x) * 0.08,
+      y: prev.y + (targetPositionRef.current.y - prev.y) * 0.08
+    }));
+    
+    requestRef.current = requestAnimationFrame(animate);
+  };
+  
+  useEffect(() => {
+    requestRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, []);
+  
+  return (
+    <div 
+      ref={containerRef}
+      className="h-64 sm:h-80 relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+    >
+      {/* Background layer (slowest) */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center will-change-transform"
+        style={{ 
+          backgroundImage: `url(${backgroundImage})`,
+          transform: `translate(${mousePosition.x * -5}px, ${mousePosition.y * -5}px) scale(1.05)`,
+          transition: 'transform 0.1s ease-out',
+        }}
+      />
+      
+      {/* Midground layer (medium speed) - Optional */}
+      {midgroundImage && (
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-center will-change-transform"
+          style={{ 
+            backgroundImage: `url(${midgroundImage})`,
+            transform: `translate(${mousePosition.x * -10}px, ${mousePosition.y * -10}px) scale(1.05)`,
+            transition: 'transform 0.1s ease-out',
+          }}
+        />
+      )}
+      
+      {/* Foreground layer (fastest) - Optional */}
+      {foregroundImage && (
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-center will-change-transform"
+          style={{ 
+            backgroundImage: `url(${foregroundImage})`,
+            transform: `translate(${mousePosition.x * -15}px, ${mousePosition.y * -15}px) scale(1.05)`,
+            transition: 'transform 0.1s ease-out',
+          }}
+        />
+      )}
+      
+      {/* Content layer */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center p-6 bg-black/30 backdrop-blur-sm rounded-lg text-white max-w-md">
+          <h3 className="text-2xl font-bold mb-2">Interactive Parallax</h3>
+          <p>Move your mouse or finger across this area to see the parallax effect</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ParallaxEffectDemo: React.FC = () => {
   // Sample image URLs - in a real implementation, these would be local images
@@ -23,39 +136,56 @@ const ParallaxEffectDemo: React.FC = () => {
           This technique adds a sense of immersion and interactivity to the user interface.
         </p>
         
-        {/* Demo instructions */}
+        {/* Interactive demo with manual control */}
         <div className="p-4 mb-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-lg">
           <p className="text-blue-800 dark:text-blue-200 font-medium">
-            Scroll up and down to see the parallax effect in action. Notice how different layers move at different speeds.
+            Move your mouse/finger across the parallax demo to see the layers move at different speeds.
           </p>
         </div>
         
-        <div className="h-[700px] flex flex-col space-y-8">
-          {/* First parallax section */}
-          <ParallaxEffect 
-            backgroundImage={mountainsBackground}
-            height="400px"
-            className="rounded-lg shadow-lg"
-          >
-            <div className="text-center p-6 bg-black/30 backdrop-blur-sm rounded-lg text-white">
-              <h3 className="text-3xl font-bold mb-2">Single Layer Parallax</h3>
-              <p className="text-lg">Background moves at a different speed than the page</p>
-            </div>
-          </ParallaxEffect>
-          
-          {/* Second parallax section with multiple layers */}
-          <ParallaxEffect 
+        {/* Interactive Parallax Demo with hover/drag effect */}
+        <div className="mb-8">
+          <InteractiveParallaxDemo 
             backgroundImage={mountainsBackground}
             midgroundImage={cloudsMidground}
             foregroundImage={treeForeground}
-            height="400px"
-            className="rounded-lg shadow-lg"
-          >
-            <div className="text-center p-6 bg-black/30 backdrop-blur-sm rounded-lg text-white">
-              <h3 className="text-3xl font-bold mb-2">Multi-Layer Parallax</h3>
-              <p className="text-lg">Multiple layers moving at different speeds</p>
+          />
+        </div>
+        
+        {/* Static examples */}
+        <h3 className="text-lg font-medium mb-4">Scrolling Parallax Examples</h3>
+        <div className="h-96 overflow-y-auto mb-8 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="h-[1000px] pt-4 relative">
+            {/* First parallax section */}
+            <div className="sticky top-4 mb-8">
+              <ParallaxEffect 
+                backgroundImage={mountainsBackground}
+                height="300px"
+                className="rounded-lg shadow-lg"
+              >
+                <div className="text-center p-6 bg-black/30 backdrop-blur-sm rounded-lg text-white">
+                  <h3 className="text-2xl font-bold mb-2">Single Layer Parallax</h3>
+                  <p>Background moves at a different speed than the page</p>
+                </div>
+              </ParallaxEffect>
             </div>
-          </ParallaxEffect>
+            
+            {/* Second parallax section with multiple layers */}
+            <div className="sticky top-72 mb-8">
+              <ParallaxEffect 
+                backgroundImage={mountainsBackground}
+                midgroundImage={cloudsMidground}
+                foregroundImage={treeForeground}
+                height="300px"
+                className="rounded-lg shadow-lg"
+              >
+                <div className="text-center p-6 bg-black/30 backdrop-blur-sm rounded-lg text-white">
+                  <h3 className="text-2xl font-bold mb-2">Multi-Layer Parallax</h3>
+                  <p>Multiple layers moving at different speeds</p>
+                </div>
+              </ParallaxEffect>
+            </div>
+          </div>
         </div>
       </div>
 

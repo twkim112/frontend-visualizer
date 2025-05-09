@@ -51,10 +51,10 @@ const ParallaxEffect: React.FC<ParallaxEffectProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Calculate parallax offsets for each layer
-  const backgroundOffset = scrollPosition * 20; // Slowest moving
-  const midgroundOffset = scrollPosition * 40; // Medium speed
-  const foregroundOffset = scrollPosition * 70; // Fastest moving
+  // Calculate parallax offsets for each layer (reduced values for more subtle effect)
+  const backgroundOffset = scrollPosition * 15; // Slowest moving
+  const midgroundOffset = scrollPosition * 25; // Medium speed
+  const foregroundOffset = scrollPosition * 35; // Fastest moving
   
   return (
     <div 

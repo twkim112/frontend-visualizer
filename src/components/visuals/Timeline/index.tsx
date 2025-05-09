@@ -12,42 +12,42 @@ import Timeline, { TimelineItem } from './Timeline';
 // Mock data for the timeline examples
 const historyEvents: TimelineItem[] = [
   {
-    id: 1,
+    id: 'web-creation',
     title: 'World Wide Web Created',
     date: '1989',
     content: 'Tim Berners-Lee invents the World Wide Web while at CERN.',
     status: 'default',
   },
   {
-    id: 2,
+    id: 'first-browser',
     title: 'First Web Browser',
     date: '1990',
     content: 'The first web browser, WorldWideWeb (later renamed Nexus), is developed.',
     status: 'default',
   },
   {
-    id: 3,
+    id: 'javascript-release',
     title: 'JavaScript Released',
     date: '1995',
     content: 'Netscape introduces JavaScript, revolutionizing web interactivity.',
     status: 'info',
   },
   {
-    id: 4,
+    id: 'css-intro',
     title: 'CSS Introduced',
     date: '1996',
     content: 'Cascading Style Sheets (CSS) becomes a W3C recommendation.',
     status: 'default',
   },
   {
-    id: 5,
+    id: 'modern-era',
     title: 'Modern Era Begins',
     date: '2005-2010',
     content: 'AJAX, jQuery, and modern JavaScript frameworks emerge.',
     status: 'success',
   },
   {
-    id: 6,
+    id: 'present-day',
     title: 'Present Day',
     date: '2023',
     content: 'Modern frameworks like React, Vue, and Angular dominate frontend development.',
@@ -266,7 +266,14 @@ const TimelineDemo: React.FC = () => {
             <h3 className="text-lg font-medium mb-3">Scrollable Horizontal Timeline</h3>
             <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
               <Timeline 
-                items={[...historyEvents, ...historyEvents.slice(0, 2)]}
+                items={[
+                  ...historyEvents, 
+                  // Add suffixes to IDs for duplicated items to ensure unique keys
+                  ...historyEvents.slice(0, 2).map(item => ({
+                    ...item,
+                    id: `${item.id}-duplicate`
+                  }))
+                ]}
                 orientation="horizontal"
                 scrollable={true}
               />
